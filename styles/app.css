@@ -92,6 +92,14 @@ a[href]:hover {
   text-decoration: underline;
 }
 
+main {
+  display: flex;
+}
+
+#places {
+}
+
 #map {
     height: 100%;
+    flex: 1;
 }

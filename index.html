@@ -9,7 +9,14 @@
     <title>Find My Cafe</title>
 </head>
 <body>  
+    <main>
+        <div id="places">
+            <ul data-bind="foreach: places">
+                <li data-bind="text: name"></li>
+            </ul>
+        </div>
     <div id="map"></div>
+    </main>
     <script src="./scripts/lib/knockout-latest.js"></script>
     <script src="./scripts/app.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=<GOOGLE_MAPS_API_KEY>&callback=onGoogleMapsApiLoaded" async defer></script>
