@@ -71,6 +71,7 @@ select,
 textarea {
   font-family: Quicksand;
   font-size: 16px;
+  padding: 4px;
 }
 
 button {
@@ -101,15 +102,6 @@ h1 {
   padding: 20px 8px;
 }
 
-a[href] {
-  color: #96732b;
-  text-decoration: none;
-}
-
-a[href]:hover {
-  text-decoration: underline;
-}
-
 nav {
   display: flex;
   border-bottom: 1px solid #dce0e0;
@@ -131,25 +123,60 @@ main {
   display: flex;
 }
 
+nav .search_box {
+  padding: 4px;
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+nav .search_box input {
+  flex: 1;
+  max-width: 400px;
+}
+
+nav .distance_box {
+  margin: 0 12px;
+}
+
 main .places_box {
   max-width: 400px;
   border-right: 1px solid #dce0e0;
-}
-
-main .places_box .search_box {
-  padding: 4px;
-  display: flex;
-}
-
-main .places_box .search_box input {
-  flex: 1;
 }
 
 main .places_box.hidden {
   display: none;
 }
 
+main .places_box .places .place {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+main .places_box .places .place:hover {
+  background-color: #dce0e0;
+}
+
+.places_box .places .place.selected {
+  font-weight: bold;
+  background-color: #dce0e0;
+}
+
 main .map {
     height: 100%;
     flex: 1;
+}
+
+main .map .info_window_box {
+  padding: 20px 0 20px 20px;
+  text-align: center;
+}
+
+main .map .info_window_box img {
+  max-height: 280px;
+}
+
+main .map .info_window_box .open_now {
+  color: #35ac19;
 }

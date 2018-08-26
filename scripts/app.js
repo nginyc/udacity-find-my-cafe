@@ -4,34 +4,29 @@ function onGoogleMapsApiLoaded() {
 
 const viewModel = {
     userLocation: ko.observable(null),
-    mapCenter: ko.observable(null),
     cafes: ko.observableArray([]),
+    searchDistanceMeters: ko.observable('500'),
     cafeSelectedId: ko.observable(null),
     isMenuOpen: ko.observable(true),
-    searchAddressString: ko.observable(null),
+    searchAddressString: ko.observable(''),
 
     init: function() {
         view.init(
             this.userLocation,
-            this.mapCenter,
             this.cafes,
             this.cafeSelectedId,
             this.isMenuOpen,
             this.searchAddressString,
+            this.searchDistanceMeters,
             (cafe) => this._onCafeSelected(cafe),
             () => this._onMenuOpenToggle(),
-            () => this._onSearchAddress(),
+            () => this._onSubmitSearch(),
         );
 
         this._placesService = new google.maps.places.PlacesService(view.map);
         this._geocoder = new google.maps.Geocoder();
 
-        this.userLocation.subscribe(() => this._onUserLocationUpdated());
-        
-        this._pullUserLocation()
-            .then((userLocation) => {
-                this.userLocation(userLocation);
-            });
+        this._onSubmitSearch();
     },
 
     _onMenuOpenToggle: function() {
@@ -42,37 +37,42 @@ const viewModel = {
         this.cafeSelectedId(cafe.id);
     },
 
-    _onSearchAddress: function() {
+    _onSubmitSearch: function() {
         const addressString = this.searchAddressString();
-        this._pullLocationFromAddress(addressString)
-            .then((location) => {
-                if (!location) {
-                    view.showAlert('Unable to find location from address.');
-                } else {
-                    this.userLocation(location);
-                }
-            });
-    },
-
-    _onUserLocationUpdated: function() {
-        // Center map onto user's location if map center is not yet previously set
-        if (this.userLocation() &&
-            !this.mapCenter()) {
-            this.mapCenter(this.userLocation());
+        if (addressString.trim()) {
+            this._pullLocationFromAddress(addressString)
+                .then((location) => {
+                    if (!location) {
+                        view.showAlert('Unable to find location from address.');
+                    } else {
+                        this.userLocation(location);
+                        this._reloadCafes();
+                    }
+                });
+        } else {
+            this._pullUserLocation()
+                .then((userLocation) => {
+                    this.userLocation(userLocation);
+                    this._reloadCafes();
+                });
         }
-
-        this._reloadCafes();
     },
 
     _reloadCafes: function() {
         const userLocation = this.userLocation();
+        const searchDistance = this.searchDistanceMeters();
         this._pullPlacesNearLocation(
             userLocation.lat,
             userLocation.lng,
-            1000, // 1 km
+            searchDistance,
             'cafe'
         ).then((cafes) => {
-            this.cafes(cafes);
+            if (cafes.length == 0) {
+                view.showAlert('Unable to find any cafes.');
+            } else {
+                this.cafes(cafes);
+                this.cafeSelectedId(cafes[0].id);
+            }
         });
     },
 
@@ -91,8 +91,6 @@ const viewModel = {
                         ));
                         return;
                     }
-
-                    console.log(results);
 
                     if (results.length == 0) {
                         resolve(null);
@@ -122,7 +120,8 @@ const viewModel = {
                     type: [type]
                 },
                 (results, status) => {
-                    if (status != google.maps.places.PlacesServiceStatus.OK) {
+                    if (status != google.maps.places.PlacesServiceStatus.OK &&
+                        status != google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
                         console.error(results);
                         reject(new Error(
                             'Error when using Google Places Service nearby search: ' + status + '.'
@@ -133,14 +132,12 @@ const viewModel = {
                     const cafes = results.map((result) => {
                         return {
                             id: result.id,
-                            place_id: result.place_id,
+                            placeId: result.place_id,
                             name: result.name,
-                            openNow: result.open_now,
                             vicinity: result.vicinity,
                             photoUrl: result.photos ? 
                                 result.photos[0].getUrl({ 
-                                    maxWidth: 200,
-                                    maxHeight: 200 
+                                    maxWidth: 360
                                 }) : null,
                             lat: result.geometry.location.lat(),
                             lng: result.geometry.location.lng()
@@ -182,10 +179,9 @@ const view = {
 
     map: null,
 
-    init: function(userLocation, mapCenter, cafes, cafeSelectedId,
-        isMenuOpen, searchAddressString,
-        onCafeSelected, onMenuOpenToggle, onSearchAddress) {
-        mapCenter.subscribe(() => this._setMapCenter(mapCenter()));
+    init: function(userLocation, cafes, cafeSelectedId,
+        isMenuOpen, searchAddressString, searchDistanceMeters,
+        onCafeSelected, onMenuOpenToggle, onSubmitSearch) {
         userLocation.subscribe(() => this._setUserLocation(userLocation()));
         cafes.subscribe(() => this._setCafes(cafes()));
         cafeSelectedId.subscribe(() => this._setCafeSelected(cafeSelectedId()));
@@ -194,9 +190,11 @@ const view = {
             placeSelectedId: cafeSelectedId,
             places: cafes,
             isMenuOpen: isMenuOpen,
+            searchDistanceMeters: searchDistanceMeters,
             onMenuOpenToggle: onMenuOpenToggle,
             searchAddressString: searchAddressString,
-            onSearchAddress: onSearchAddress
+            onSubmitSearch: onSubmitSearch,
+            onPlaceSelected: onCafeSelected
         });
 
         this._onCafeSelected = onCafeSelected;
@@ -206,13 +204,6 @@ const view = {
 
     showAlert: function(message) {
         window.alert(message);
-    },
-    
-    _setMapCenter: function(mapCenter) {
-        this.map.setCenter({
-            lat: mapCenter.lat,
-            lng: mapCenter.lng
-        });
     },
 
     _setUserLocation: function(userLocation) {
@@ -226,6 +217,10 @@ const view = {
         );
 
         this.map.setZoom(16);
+        this.map.setCenter({
+            lat: userLocation.lat,
+            lng: userLocation.lng
+        });
     },
 
     _setCafes: function(cafes) {
@@ -285,10 +280,10 @@ const view = {
         this._highlightMarker(marker);
         const cafe = marker.cafe;
         this._selectedCafeInfoWindow = this._makeCafeInfoWindow(
+            cafe.placeId,
             cafe.name,
             cafe.vicinity,
-            cafe.photoUrl,
-            cafe.openNow
+            cafe.photoUrl
         );
         this._selectedCafeInfoWindow.open(this.map, marker);
     },
@@ -300,18 +295,18 @@ const view = {
         }, 1000);
     },
 
-    _makeCafeInfoWindow: function(name, vicinity, photoUrl, openNow) {
+    _makeCafeInfoWindow: function(placeId, name, vicinity, photoUrl) {
         const html = `
             <div class="info_window_box">
-                <span class="_name">${name}</span>
-                <span class="_vicinity">${vicinity}</span>
-                ${openNow ? '<span class="_open_now">Open now!</span>' : ''}
-                ${photoUrl ? `<img class="_image" src="${photoUrl}" />` : ''}
+                <h2>${name}</h2>
+                <p>${vicinity} (<a target="_blank" href="https://www.google.com/maps/search/?api=1&query=${vicinity}&query_place_id=${placeId}">On Google Maps</a>)</p>
+                ${photoUrl ? `<img class="image" src="${photoUrl}" />` : ''}
+               
             </div>
         `;
         const infoWindow = new google.maps.InfoWindow({
             content: html,
-            maxWidth: 200
+            maxWidth: 400
         });
         return infoWindow;
     },
@@ -319,7 +314,7 @@ const view = {
     _makeUserLocationMarker: function(lat, lng) {
         const marker = new google.maps.Marker({
             icon: {
-                url: './images/user-location-marker.png',
+                url: './images/user_location_marker.png',
             },
             map: this.map,
             position: {

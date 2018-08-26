@@ -16,19 +16,30 @@
         <div>
             <h1>Find My Cafe</h1>
         </div>
-    </nav>
-    <main>
-        <div class="places_box" data-bind="css: { hidden: !isMenuOpen() }">
             <form class="search_box">
+            <div class="distance_box">
+                <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="500">500m away
+                <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="1000">1km away
+                <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="2000">2km away
+            </div>
                 <input type="text"
                     autocomplete="on"
                     nmae="address" 
                     data-bind="value: searchAddressString" 
-                    placeholder="Search for Location..."/>
-                <button data-bind="click: onSearchAddress">Search</button>    
+                placeholder="From Location..."/>
+            <div>
+                <button data-bind="click: onSubmitSearch">Search</button>   
+            </div> 
             </form>
+    </nav>
+    <main>
+        <div class="places_box" data-bind="css: { hidden: !isMenuOpen() }">
             <ul class="places" data-bind="foreach: places">
-                <li class="place" data-bind="text: name"></li>
+                <li class="place" 
+                    data-bind=
+                        "text: name, 
+                        css: { selected: $parent.placeSelectedId() == id },
+                        click: $parent.onPlaceSelected($data)"></li>
             </ul>
         </div>
         <div class="map" id="map"></div>
