@@ -16,7 +16,7 @@
         <div>
             <h1>Find My Cafe</h1>
         </div>
-            <form class="search_box">
+        <form class="search_form">
             <div class="distance_box">
                 <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="500">500m away
                 <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="1000">1km away
@@ -24,7 +24,7 @@
             </div>
                 <input type="text"
                     autocomplete="on"
-                    nmae="address" 
+                name="address" 
                     data-bind="value: searchAddressString" 
                 placeholder="From Location..."/>
             <div>
@@ -34,6 +34,21 @@
     </nav>
     <main>
         <div class="places_box" data-bind="css: { hidden: !isMenuOpen() }">
+            <div>
+                <form class="filter_form">
+                    <input type="text"
+                            autocomplete="on"
+                            name="searchFilterString" 
+                            data-bind="value: searchFilterString" 
+                            placeholder="Filter Cafe Names..."/>
+                    <button data-bind="click: onSubmitFilter">Filter</button>  
+                </form>
+                <!-- ko if: searchFilterString -->
+                <div class="search_filter_text">
+                    Filtering names with "<strong data-bind="text: searchFilterString"></strong>"...
+                </div>
+                <!-- /ko -->
+            </div>
             <ul class="places" data-bind="foreach: places">
                 <li class="place" 
                     data-bind=
@@ -43,6 +58,11 @@
             </ul>
         </div>
         <div class="map" id="map"></div>
+        <!-- ko if: isLoading -->
+        <div class="loading_overlay">
+            <img src="./images/loading_indicator.gif" />
+        </div>
+        <!-- /ko -->
     </main>
     <script src="./scripts/lib/knockout-latest.js"></script>
     <script src="./scripts/app.js"></script>

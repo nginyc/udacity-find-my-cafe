@@ -3,29 +3,33 @@ function onGoogleMapsApiLoaded() {
 }
 
 const viewModel = {
+    cafes: [],
     userLocation: ko.observable(null),
-    cafes: ko.observableArray([]),
-    searchDistanceMeters: ko.observable('500'),
+    filteredCafes: ko.observableArray([]),
+    searchDistanceMeters: ko.observable('2000'),
     cafeSelectedId: ko.observable(null),
     isMenuOpen: ko.observable(true),
+    searchFilterString: ko.observable(''),
     searchAddressString: ko.observable(''),
+    isLoading: ko.observable(false),
 
     init: function() {
         view.init(
             this.userLocation,
-            this.cafes,
+            this.filteredCafes,
             this.cafeSelectedId,
             this.isMenuOpen,
             this.searchAddressString,
             this.searchDistanceMeters,
+            this.searchFilterString,
+            this.isLoading,
             (cafe) => this._onCafeSelected(cafe),
             () => this._onMenuOpenToggle(),
             () => this._onSubmitSearch(),
+            () => this._updateFilteredCafes(),
         );
-
-        this._placesService = new google.maps.places.PlacesService(view.map);
-        this._geocoder = new google.maps.Geocoder();
-
+        googleApi.init();
+        
         this._onSubmitSearch();
     },
 
@@ -37,11 +41,28 @@ const viewModel = {
         this.cafeSelectedId(cafe.id);
     },
 
+    _updateFilteredCafes: function() {
+        const searchFilterString = this.searchFilterString();
+        const filteredCafes = this.cafes.filter((cafe) => {
+            return cafe.name.toLowerCase().includes(searchFilterString.toLowerCase());
+        });
+
+        this.filteredCafes(filteredCafes);
+
+        if (filteredCafes.length == 0) {
+            view.showAlert('No matching cafes!');
+        } else {
+            this.cafeSelectedId(filteredCafes[0].id);
+        }
+    },
+
     _onSubmitSearch: function() {
         const addressString = this.searchAddressString();
         if (addressString.trim()) {
-            this._pullLocationFromAddress(addressString)
+            this.isLoading(true);
+            googleApi.pullLocationFromAddress(addressString)
                 .then((location) => {
+                    this.isLoading(false);
                     if (!location) {
                         view.showAlert('Unable to find location from address.');
                     } else {
@@ -50,8 +71,10 @@ const viewModel = {
                     }
                 });
         } else {
+            this.isLoading(true);
             this._pullUserLocation()
                 .then((userLocation) => {
+                    this.isLoading(false);
                     this.userLocation(userLocation);
                     this._reloadCafes();
                 });
@@ -61,22 +84,52 @@ const viewModel = {
     _reloadCafes: function() {
         const userLocation = this.userLocation();
         const searchDistance = this.searchDistanceMeters();
-        this._pullPlacesNearLocation(
+        this.isLoading(true);
+        googleApi.pullPlacesNearLocation(
             userLocation.lat,
             userLocation.lng,
             searchDistance,
             'cafe'
         ).then((cafes) => {
+            this.isLoading(false);
             if (cafes.length == 0) {
                 view.showAlert('Unable to find any cafes.');
             } else {
-                this.cafes(cafes);
-                this.cafeSelectedId(cafes[0].id);
+                this.cafes = cafes;
+                this._updateFilteredCafes();
             }
         });
     },
 
-    _pullLocationFromAddress: function(addressString) {
+    _pullUserLocation: function() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation not supported.'));
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                },
+                (error) => {
+                    reject(error);
+                }
+            );
+        });
+    }
+};
+
+
+const googleApi = {
+    init: function() {
+        this._placesService = new google.maps.places.PlacesService(view.map);
+        this._geocoder = new google.maps.Geocoder();
+    },
+    
+    pullLocationFromAddress: function(addressString) {
         return new Promise((resolve, reject) => {
             this._geocoder.geocode(
                 {
@@ -108,9 +161,11 @@ const viewModel = {
         })
     },
 
-    _pullPlacesNearLocation: function(lat, lng, radius, type) {
+    pullPlacesNearLocation: function(lat, lng, radius, type) {
         return new Promise((resolve, reject) => {
-           this._placesService.nearbySearch(
+            const cafes = [];
+
+            this._placesService.nearbySearch(
                 {
                     location: {
                         lat: lat,
@@ -119,7 +174,7 @@ const viewModel = {
                     radius: radius,
                     type: [type]
                 },
-                (results, status) => {
+                (results, status, pagination) => {
                     if (status != google.maps.places.PlacesServiceStatus.OK &&
                         status != google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
                         console.error(results);
@@ -129,8 +184,8 @@ const viewModel = {
                         return;
                     }
 
-                    const cafes = results.map((result) => {
-                        return {
+                    for (const result of results) {
+                        cafes.push({
                             id: result.id,
                             placeId: result.place_id,
                             name: result.name,
@@ -141,35 +196,19 @@ const viewModel = {
                                 }) : null,
                             lat: result.geometry.location.lat(),
                             lng: result.geometry.location.lng()
-                        };
-                    });
+                        });
+                    }
                     
-                    resolve(cafes);
+                    if (!pagination.hasNextPage) {
+                        resolve(cafes);
+                    } else {
+                        pagination.nextPage();
+                    }
                 }
            );
         });
-    },
-
-    _pullUserLocation: function() {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-                reject(new Error('Geolocation not supported.'));
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
-                },
-                (error) => {
-                    reject(error);
-                }
-            );
-        });
     }
-};
+}
 
 const view = {
     DEFAULT_MAP_CENTER: { 
@@ -179,21 +218,26 @@ const view = {
 
     map: null,
 
-    init: function(userLocation, cafes, cafeSelectedId,
-        isMenuOpen, searchAddressString, searchDistanceMeters,
-        onCafeSelected, onMenuOpenToggle, onSubmitSearch) {
+    init: function(userLocation, filteredCafes, cafeSelectedId,
+        isMenuOpen, searchAddressString, searchDistanceMeters, 
+        searchFilterString, isLoading,
+        onCafeSelected, onMenuOpenToggle, onSubmitSearch,
+        onSubmitFilter) {
         userLocation.subscribe(() => this._setUserLocation(userLocation()));
-        cafes.subscribe(() => this._setCafes(cafes()));
+        filteredCafes.subscribe(() => this._setCafes(filteredCafes()));
         cafeSelectedId.subscribe(() => this._setCafeSelected(cafeSelectedId()));
 
         ko.applyBindings({
             placeSelectedId: cafeSelectedId,
-            places: cafes,
+            places: filteredCafes,
             isMenuOpen: isMenuOpen,
             searchDistanceMeters: searchDistanceMeters,
+            isLoading: isLoading,
+            searchFilterString: searchFilterString,
             onMenuOpenToggle: onMenuOpenToggle,
             searchAddressString: searchAddressString,
             onSubmitSearch: onSubmitSearch,
+            onSubmitFilter: onSubmitFilter,
             onPlaceSelected: onCafeSelected
         });
 
@@ -228,6 +272,10 @@ const view = {
             for (const marker of this._cafeMarkers) {
                 marker.setMap(null);
             }
+        }
+
+        if (cafes.length == 0) {
+            return;
         }
 
         this._cafeMarkers = cafes.map((cafe) => {

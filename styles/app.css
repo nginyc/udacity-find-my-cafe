@@ -119,11 +119,8 @@ nav h1 {
   padding-left: 8px;
 }
 
-main {
-  display: flex;
-}
 
-nav .search_box {
+nav .search_form {
   padding: 4px;
   display: flex;
   flex: 1;
@@ -131,7 +128,7 @@ nav .search_box {
   align-items: center;
 }
 
-nav .search_box input {
+nav .search_form input {
   flex: 1;
   max-width: 400px;
 }
@@ -140,13 +137,27 @@ nav .distance_box {
   margin: 0 12px;
 }
 
+main {
+  display: flex;
+}
+
 main .places_box {
-  max-width: 400px;
+  width: 400px;
   border-right: 1px solid #dce0e0;
+  display: flex;
+  flex-direction: column;
 }
 
 main .places_box.hidden {
   display: none;
+}
+
+main .places_box .search_filter_text {
+  padding: 8px;
+}
+
+main .places_box .places {
+  overflow: auto;
 }
 
 main .places_box .places .place {
@@ -158,9 +169,19 @@ main .places_box .places .place:hover {
   background-color: #dce0e0;
 }
 
-.places_box .places .place.selected {
+main .places_box .places .place.selected {
   font-weight: bold;
   background-color: #dce0e0;
+}
+
+main .filter_form {
+  display: flex;
+  padding: 4px;
+}
+
+main .filter_form input {
+  flex: 1;
+  max-width: 400px;
 }
 
 main .map {
@@ -179,4 +200,20 @@ main .map .info_window_box img {
 
 main .map .info_window_box .open_now {
   color: #35ac19;
+}
+
+main .loading_overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+main .loading_overlay img {
+  max-width: 40px;
 }
