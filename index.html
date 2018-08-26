@@ -8,7 +8,7 @@
     <link rel="stylesheet" type="text/css" href="./styles/app.css">
     <title>Find My Cafe</title>
 </head>
-<body>  
+<body>
     <nav>
         <a class="menu_icon" href="#" data-bind="click: onMenuOpenToggle">
             <img src="./images/menu_icon.png" />
@@ -22,15 +22,15 @@
                 <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="1000">1km away
                 <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="2000">2km away
             </div>
-                <input type="text"
-                    autocomplete="on"
+            <input type="text"
+                autocomplete="on"
                 name="address" 
-                    data-bind="value: searchAddressString" 
+                data-bind="value: searchAddressString" 
                 placeholder="From Location..."/>
             <div>
                 <button data-bind="click: onSubmitSearch">Search</button>   
             </div> 
-            </form>
+        </form>
     </nav>
     <main>
         <div class="places_box" data-bind="css: { hidden: !isMenuOpen() }">
@@ -53,8 +53,8 @@
                 <li class="place" 
                     data-bind=
                         "text: name, 
-                        css: { selected: $parent.placeSelectedId() == id },
-                        click: $parent.onPlaceSelected($data)"></li>
+                        css: { selected: $parent.placeSelected() && $parent.placeSelected().id == id },
+                        click: () => $parent.onPlaceSelected($data)"></li>
             </ul>
         </div>
         <div class="map" id="map"></div>
@@ -66,5 +66,5 @@
     </main>
     <script src="./scripts/lib/knockout-latest.js"></script>
     <script src="./scripts/app.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=<GOOGLE_MAPS_API_KEY>&callback=onGoogleMapsApiLoaded" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIWVQ7uIQr8MfM8r8oYp4r_ygQB6LINTs&libraries=places&callback=onGoogleMapsApiLoaded" async defer></script>
 </html>

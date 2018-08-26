@@ -7,17 +7,19 @@ const viewModel = {
     userLocation: ko.observable(null),
     filteredCafes: ko.observableArray([]),
     searchDistanceMeters: ko.observable('2000'),
-    cafeSelectedId: ko.observable(null),
+    cafeSelected: ko.observable(null),
+    cafeSelectedDetails: ko.observable(null),
     isMenuOpen: ko.observable(true),
     searchFilterString: ko.observable(''),
-    searchAddressString: ko.observable(''),
+    searchAddressString: ko.observable('1 Market Street, San Francisco, CA, USA'),
     isLoading: ko.observable(false),
 
     init: function() {
         view.init(
             this.userLocation,
             this.filteredCafes,
-            this.cafeSelectedId,
+            this.cafeSelected,
+            this.cafeSelectedDetails,
             this.isMenuOpen,
             this.searchAddressString,
             this.searchDistanceMeters,
@@ -29,6 +31,7 @@ const viewModel = {
             () => this._updateFilteredCafes(),
         );
         googleApi.init();
+        foursquareApi.init();
         
         this._onSubmitSearch();
     },
@@ -38,7 +41,12 @@ const viewModel = {
     },
 
     _onCafeSelected: function(cafe) {
-        this.cafeSelectedId(cafe.id);
+        this.cafeSelected(cafe);
+
+        foursquareApi.pullPlaceDetails(cafe.lat, cafe.lng, cafe.name)
+            .then((details) => {
+                this.cafeSelectedDetails(details);
+            });
     },
 
     _updateFilteredCafes: function() {
@@ -52,7 +60,7 @@ const viewModel = {
         if (filteredCafes.length == 0) {
             view.showAlert('No matching cafes!');
         } else {
-            this.cafeSelectedId(filteredCafes[0].id);
+            this._onCafeSelected(filteredCafes[0]);
         }
     },
 
@@ -121,6 +129,55 @@ const viewModel = {
         });
     }
 };
+
+const foursquareApi = {
+    CLIENT_ID: 'EZHVEROFCZWGYGKDZBMUUZSRQOKB3ALLT0MUXDQ2E5TA3IJQ',
+    CLIENT_SECRET: 'ZQM40VYDJPUXX02ICPEH2FJIPNPNKBNHUV0S4RXHQBLZL1HD',
+    
+    init: function() {},
+
+    pullPlaceDetails: function(lat, lng, name) {
+        return this._fetch('/v2/venues/search', {
+            limit: 1,
+            query: name,
+            ll: lat + ',' + lng
+        }).then((res) => {
+            return res.json();
+        }).then((res) => {
+            if (res.response.venues.length == 0) {
+                throw new Error('Failed to find venue on Foursquare');
+            }
+            const venueId = res.response.venues[0].id;
+            return this._fetch('/v2/venues/' + venueId, {});
+        }).then((res) => {
+            return res.json();
+        }).then((res) => {
+            const details = {};
+            if (!res.response.venue) {
+                throw new Error('Failed to retrieve venue details on Foursquare');
+            }
+
+            if (res.response.venue.hours) {
+                details.hoursText = res.response.venue.hours.status;
+            }
+            details.foursquareUrl = res.response.venue.canonicalUrl;
+            details.placeUrl = res.response.venue.url || null; 
+            return details;
+        });
+    },
+
+    _fetch: function(path, options) {
+        let url = 'https://api.foursquare.com' + path + 
+            '?v=20180323&client_id=' + this.CLIENT_ID + 
+            '&client_secret=' + this.CLIENT_SECRET;
+        
+        for (const option of Object.keys(options)) {
+            url += '&' + option + '=' + options[option];
+        }
+
+        return fetch(url);
+    }
+}
 
 
 const googleApi = {
@@ -212,23 +269,24 @@ const googleApi = {
 
 const view = {
     DEFAULT_MAP_CENTER: { 
-        lat: 1.3466341, 
-        lng: 103.805542 
-    }, // Center of Singapore
+        lat: 37.7576793, 
+        lng: -122.5076404
+    }, // San Francisco
 
     map: null,
 
-    init: function(userLocation, filteredCafes, cafeSelectedId,
+    init: function(userLocation, filteredCafes, cafeSelected, cafeSelectedDetails,
         isMenuOpen, searchAddressString, searchDistanceMeters, 
         searchFilterString, isLoading,
         onCafeSelected, onMenuOpenToggle, onSubmitSearch,
         onSubmitFilter) {
         userLocation.subscribe(() => this._setUserLocation(userLocation()));
         filteredCafes.subscribe(() => this._setCafes(filteredCafes()));
-        cafeSelectedId.subscribe(() => this._setCafeSelected(cafeSelectedId()));
+        cafeSelected.subscribe(() => this._setCafeSelected(cafeSelected()));
+        cafeSelectedDetails.subscribe(() => this._setCafeSelectedDetails(cafeSelected(), cafeSelectedDetails()));
 
         ko.applyBindings({
-            placeSelectedId: cafeSelectedId,
+            placeSelected: cafeSelected,
             places: filteredCafes,
             isMenuOpen: isMenuOpen,
             searchDistanceMeters: searchDistanceMeters,
@@ -306,13 +364,13 @@ const view = {
         this.map.fitBounds(bounds);
     },
 
-    _setCafeSelected(cafeSelectedId) {
+    _setCafeSelected: function(cafeSelected) {
         if (!this._cafeMarkers) {
            return;
         }
 
         const marker = this._cafeMarkers.find((marker) => {
-            return marker.cafe.id == cafeSelectedId
+            return marker.cafe.id == cafeSelected.id;
         });
 
         if (!marker) {
@@ -326,7 +384,7 @@ const view = {
 
         // Open a info window for selected cafe
         this._highlightMarker(marker);
-        const cafe = marker.cafe;
+        const cafe = cafeSelected;
         this._selectedCafeInfoWindow = this._makeCafeInfoWindow(
             cafe.placeId,
             cafe.name,
@@ -336,7 +394,26 @@ const view = {
         this._selectedCafeInfoWindow.open(this.map, marker);
     },
 
-    _highlightMarker(marker) {
+    _setCafeSelectedDetails: function(cafeSelected, details) {
+        if (!this._selectedCafeInfoWindow) {
+            return;
+        }
+
+        const cafe = cafeSelected;
+        const content = this._getCafeInfoWindowContent(
+            cafe.placeId, 
+            cafe.name, 
+            cafe.vicinity, 
+            cafe.photoUrl,
+            details.hoursText,
+            details.foursquareUrl,
+            details.placeUrl
+        );
+
+        this._selectedCafeInfoWindow.setContent(content);
+    },
+
+    _highlightMarker: function(marker) {
         marker.setAnimation(google.maps.Animation.BOUNCE);
         setTimeout(() => {
             marker.setAnimation(null);
@@ -344,19 +421,30 @@ const view = {
     },
 
     _makeCafeInfoWindow: function(placeId, name, vicinity, photoUrl) {
+        const content = this._getCafeInfoWindowContent(placeId, name, vicinity, photoUrl);
+        const infoWindow = new google.maps.InfoWindow({
+            content: content,
+            maxWidth: 400
+        });
+        return infoWindow;
+    },
+
+    _getCafeInfoWindowContent: function(placeId, name, vicinity, 
+        photoUrl, hoursText, foursquareUrl, placeUrl) {
         const html = `
             <div class="info_window_box">
                 <h2>${name}</h2>
                 <p>${vicinity} (<a target="_blank" href="https://www.google.com/maps/search/?api=1&query=${vicinity}&query_place_id=${placeId}">On Google Maps</a>)</p>
                 ${photoUrl ? `<img class="image" src="${photoUrl}" />` : ''}
-               
+                ${hoursText ? `<p>${hoursText}</p>`: ''}
+                <p>
+                ${placeUrl ? `<a target="_blank" href="${placeUrl}">Official Site</a>`: ''}
+                ${placeUrl && foursquareUrl ? ' | ' : ''}
+                ${foursquareUrl ? `<a target="_blank" href="${foursquareUrl}">Foursquare</a>`: ''}
+                </p>
             </div>
         `;
-        const infoWindow = new google.maps.InfoWindow({
-            content: html,
-            maxWidth: 400
-        });
-        return infoWindow;
+        return html;
     },
 
     _makeUserLocationMarker: function(lat, lng) {
