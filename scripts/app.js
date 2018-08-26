@@ -42,10 +42,10 @@ const app = {
             isMenuOpen: ko.observable(false),
 
             // Input search filter string to filter cafes by
-            searchFilterString: ko.observable(this.DEFAULT_ADDRESS),
+            searchFilterString: ko.observable(''),
 
             // Input address string to search a location by
-            searchAddressString: ko.observable(),
+            searchAddressString: ko.observable(this.DEFAULT_ADDRESS),
 
             // Whether the app is loading. This causes a loading indicator overlay to appear
             isLoading: ko.observable(false),
@@ -121,6 +121,8 @@ const app = {
 
             })
             .catch((error) => {
+                this.viewModel.isLoading(false);
+                
                 // Show an error to the user if search throws an error
                 console.error(error);
                 view.showAlert('Error while searching for cafes');
@@ -188,6 +190,8 @@ const app = {
                     }
                 })
                 .catch((error) => {
+                    this.viewModel.isLoading(false);
+                    
                     // Show an error to the user if geocoding throws an error
                     console.error(error);
                     view.showAlert(
@@ -195,18 +199,25 @@ const app = {
                     );
                 });
 
-            // Otherwise, if the address string is empty, try to pull user's current location
         } else {
+            // Otherwise, if the address string is empty, try to pull user's current location
             this.viewModel.isLoading(true);
             this._pullUserLocation()
                 .then((userLocation) => {
                     this.viewModel.isLoading(false);
+
                     this.viewModel.userLocation(userLocation);
                     this._reloadCafes();
                 })
                 .catch((error) => {
-                    // Log error if unable to retrieve user's current location
-                    console.log(error);
+                    this.viewModel.isLoading(false);
+
+                    // Show an error to the user if unable to get user's current location
+                    console.error(error);
+
+                    view.showAlert(
+                        'Error while retrieving user\'s current location'
+                    );
                 });
         }
     }
