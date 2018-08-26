@@ -3,7 +3,7 @@ const view = {
     DEFAULT_MAP_CENTER: {
         lat: 37.7576793,
         lng: -122.5076404
-    }, 
+    },
 
     // The Google Maps `map` object, corresponding to the map display
     map: null,
@@ -11,14 +11,18 @@ const view = {
     init: function (viewModel) {
         // Apply Knockout UI bindings
         ko.applyBindings(viewModel);
-        
+
         // Necessarily subscribe to changes to the observables of the view model
         // This is mainly keep the Google Maps drawing in-sync with the view model 
-        viewModel.userLocation.subscribe(() => this._setUserLocation(viewModel.userLocation()));
+        viewModel.userLocation.subscribe(() => this._setUserLocation(
+            viewModel.userLocation()));
         viewModel.cafes.subscribe(() => this._setCafes(viewModel.cafes()));
-        viewModel.cafeSelected.subscribe(() => this._setCafeSelected(viewModel.cafeSelected()));
-        viewModel.cafeSelectedDetails.subscribe(() => this._setCafeSelectedDetails(viewModel.cafeSelected(), viewModel.cafeSelectedDetails()));
-        
+        viewModel.cafeSelected.subscribe(() => this._setCafeSelected(
+            viewModel.cafeSelected()));
+        viewModel.cafeSelectedDetails.subscribe(() => this._setCafeSelectedDetails(
+            viewModel.cafeSelected(), viewModel.cafeSelectedDetails()
+        ));
+
         // Store callbacks for use by own methods later
         this._onCafeSelected = viewModel.onCafeSelected;
 
@@ -175,7 +179,8 @@ const view = {
      * Makes a Google Maps info window for a cafe
      */
     _makeCafeInfoWindow: function (placeId, name, vicinity, photoUrl) {
-        const content = this._getCafeInfoWindowContent(placeId, name, vicinity, photoUrl);
+        const content = this._getCafeInfoWindowContent(placeId, name,
+            vicinity, photoUrl);
         const infoWindow = new google.maps.InfoWindow({
             content: content,
             maxWidth: 400
@@ -188,11 +193,12 @@ const view = {
      */
     _getCafeInfoWindowContent: function (placeId, name, vicinity,
         photoUrl, hoursText, foursquareUrl, placeUrl) {
-        const html = `
+        const html =
+            `
             <div class="info_window_box">
                 <h2>${name}</h2>
                 <p>${vicinity} (<a target="_blank" href="https://www.google.com/maps/search/?api=1&query=${vicinity}&query_place_id=${placeId}">On Google Maps</a>)</p>
-                ${photoUrl ? `<img class="image" src="${photoUrl}" />` : ''}
+                ${photoUrl ? `<img alt="${name}" class="image" src="${photoUrl}" />` : ''}
                 ${hoursText ? `<p>${hoursText}</p>` : ''}
                 <p>
                 ${placeUrl ? `<a target="_blank" href="${placeUrl}">Official Site</a>` : ''}
@@ -244,8 +250,7 @@ const view = {
      */
     _makeMap: function () {
         return new google.maps.Map(
-            document.getElementById('map'),
-            {
+            document.getElementById('map'), {
                 zoom: 12,
                 center: this.DEFAULT_MAP_CENTER
             }

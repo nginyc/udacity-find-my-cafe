@@ -21,14 +21,14 @@ const app = {
     /**
      * Initializes the (Knockout) view model, the view, and google maps & foursquare API wrappers
      */
-    init: function() {
+    init: function () {
         this.viewModel = {
             // Input location to search cafes from
             userLocation: ko.observable(null),
 
             // Filtered list of cafes shown to the user
             cafes: ko.observableArray([]),
-            
+
             // Input search distance in meters to search cafes by
             searchDistanceMeters: ko.observable(this.DEFAULT_SEARCH_DISTANCE),
 
@@ -70,14 +70,16 @@ const app = {
         // Start by doing a search with the default search values
         this._onSubmitSearch();
     },
-    
+
     /**
      * Updates the view model's list of cafes shown, filtered by the search filter string
      */
-    _updateFilteredCafes: function() {
+    _updateFilteredCafes: function () {
         const searchFilterString = this.viewModel.searchFilterString();
         const filteredCafes = this.cafes.filter((cafe) => {
-            return cafe.name.toLowerCase().includes(searchFilterString.toLowerCase());
+            return cafe.name.toLowerCase()
+                .includes(
+                    searchFilterString.toLowerCase());
         });
 
         this.viewModel.cafes(filteredCafes);
@@ -93,7 +95,7 @@ const app = {
     /**
      * Re-fetch full list of cafes based on input location, using Google Maps API
      */
-    _reloadCafes: function() {
+    _reloadCafes: function () {
         const userLocation = this.viewModel.userLocation();
         const searchDistance = this.viewModel.searchDistanceMeters();
 
@@ -101,32 +103,34 @@ const app = {
 
         // Do a Google places search based on input location & search distance 
         googleApi.pullPlacesNearLocation(
-            userLocation.lat,
-            userLocation.lng,
-            searchDistance,
-            'cafe'
-        ).then((cafes) => {
-            this.viewModel.isLoading(false);
+                userLocation.lat,
+                userLocation.lng,
+                searchDistance,
+                'cafe'
+            )
+            .then((cafes) => {
+                this.viewModel.isLoading(false);
 
-            // Show a warning to the user if searching produces no results
-            if (cafes.length == 0) {
-                view.showAlert('Unable to find any cafes');
-            } else {
-                this.cafes = cafes;
-                this._updateFilteredCafes();
-            }
+                // Show a warning to the user if searching produces no results
+                if (cafes.length == 0) {
+                    view.showAlert('Unable to find any cafes');
+                } else {
+                    this.cafes = cafes;
+                    this._updateFilteredCafes();
+                }
 
-        }).catch((error) => {
-            // Show an error to the user if search throws an error
-            console.error(error);
-            view.showAlert('Error while searching for cafes');
-        });
+            })
+            .catch((error) => {
+                // Show an error to the user if search throws an error
+                console.error(error);
+                view.showAlert('Error while searching for cafes');
+            });
     },
-    
+
     /**
      * Resolves with the user's current location
      */
-    _pullUserLocation: function() {
+    _pullUserLocation: function () {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
                 reject(new Error('Geolocation not supported.'));
@@ -146,11 +150,11 @@ const app = {
         });
     },
 
-    _onMenuOpenToggle: function() {
+    _onMenuOpenToggle: function () {
         this.viewModel.isMenuOpen(!this.viewModel.isMenuOpen());
     },
 
-    _onCafeSelected: function(cafe) {
+    _onCafeSelected: function (cafe) {
         this.viewModel.cafeSelected(cafe);
 
         // Close the menu when a cafe is selected
@@ -164,7 +168,7 @@ const app = {
             });
     },
 
-    _onSubmitSearch: function() {
+    _onSubmitSearch: function () {
         const addressString = this.viewModel.searchAddressString();
 
         // If the address string is non-empty, do Google Maps geocoding to get
@@ -175,7 +179,9 @@ const app = {
                 .then((location) => {
                     this.viewModel.isLoading(false);
                     if (!location) {
-                        view.showAlert('Unable to geocode location from address');
+                        view.showAlert(
+                            'Unable to geocode location from address'
+                        );
                     } else {
                         this.viewModel.userLocation(location);
                         this._reloadCafes();
@@ -184,10 +190,12 @@ const app = {
                 .catch((error) => {
                     // Show an error to the user if geocoding throws an error
                     console.error(error);
-                    view.showAlert('Error while geocoding location from address');
+                    view.showAlert(
+                        'Error while geocoding location from address'
+                    );
                 });
-        
-        // Otherwise, if the address string is empty, try to pull user's current location
+
+            // Otherwise, if the address string is empty, try to pull user's current location
         } else {
             this.viewModel.isLoading(true);
             this._pullUserLocation()

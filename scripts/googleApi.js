@@ -1,6 +1,7 @@
 const googleApi = {
-    init: function() {
-        this._placesService = new google.maps.places.PlacesService(view.map);
+    init: function () {
+        this._placesService = new google.maps.places.PlacesService(view
+            .map);
         this._geocoder = new google.maps.Geocoder();
     },
 
@@ -8,18 +9,20 @@ const googleApi = {
      * Fetches a location from Google Maps Geocoding API given address string
      * Resolves to the location object of shape { lat, lng }
      */
-    pullLocationFromAddress: function(addressString) {
+    pullLocationFromAddress: function (addressString) {
         return new Promise((resolve, reject) => {
-            this._geocoder.geocode(
-                {
+            this._geocoder.geocode({
                     address: addressString
                 },
                 (results, status) => {
-                    if (status != google.maps.GeocoderStatus.OK &&
-                        status != google.maps.GeocoderStatus.ZERO_RESULTS) {
+                    if (status != google.maps.GeocoderStatus
+                        .OK &&
+                        status != google.maps.GeocoderStatus
+                        .ZERO_RESULTS) {
                         console.error(results);
                         reject(new Error(
-                            'Error when using Google Geocoding Service: ' + status + '.'
+                            'Error when using Google Geocoding Service: ' +
+                            status + '.'
                         ));
                         return;
                     }
@@ -44,12 +47,11 @@ const googleApi = {
      * Fetches a list of places from Google Places API given latitude, longitude, radius & place type
      * Resolves to an array of place objects with shape { id, placeId, name, vicinity, photoUrl, lat, lng }
      */
-    pullPlacesNearLocation: function(lat, lng, radius, type) {
+    pullPlacesNearLocation: function (lat, lng, radius, type) {
         return new Promise((resolve, reject) => {
             const places = [];
 
-            this._placesService.nearbySearch(
-                {
+            this._placesService.nearbySearch({
                     location: {
                         lat: lat,
                         lng: lng
@@ -58,11 +60,14 @@ const googleApi = {
                     type: [type]
                 },
                 (results, status, pagination) => {
-                    if (status != google.maps.places.PlacesServiceStatus.OK &&
-                        status != google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+                    if (status != google.maps.places.PlacesServiceStatus
+                        .OK &&
+                        status != google.maps.places.PlacesServiceStatus
+                        .ZERO_RESULTS) {
                         console.error(results);
                         reject(new Error(
-                            'Error when using Google Places Service nearby search: ' + status + '.'
+                            'Error when using Google Places Service nearby search: ' +
+                            status + '.'
                         ));
                         return;
                     }
@@ -77,8 +82,10 @@ const googleApi = {
                                 result.photos[0].getUrl({
                                     maxWidth: 360
                                 }) : null,
-                            lat: result.geometry.location.lat(),
-                            lng: result.geometry.location.lng()
+                            lat: result.geometry.location
+                                .lat(),
+                            lng: result.geometry.location
+                                .lng()
                         });
                     }
 
@@ -90,7 +97,7 @@ const googleApi = {
                         pagination.nextPage();
                     }
                 }
-           );
+            );
         });
     }
 }

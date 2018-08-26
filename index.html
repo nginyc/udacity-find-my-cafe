@@ -14,7 +14,7 @@
     <nav>
         <div class="title_box">
             <a class="menu_icon" href="#" data-bind="click: onMenuOpenToggle">
-                <img src="./images/menu_icon.png" />
+                <img alt="Menu icon" src="./images/menu_icon.png" />
             </a>
             <div>
                 <h1>Find My Cafe</h1>
@@ -30,11 +30,11 @@
             <div class="search_box">
                 <input type="text"
                     autocomplete="on"
-                    name="address" 
-                    data-bind="value: searchAddressString" 
+                    name="address"
+                    data-bind="value: searchAddressString"
                     placeholder="From Location..."/>
-                <button data-bind="click: onSubmitSearch">Search</button>   
-            </div> 
+                <button data-bind="click: onSubmitSearch">Search</button>
+            </div>
         </form>
     </nav>
     <main>
@@ -43,10 +43,10 @@
                 <form class="filter_form">
                     <input type="text"
                             autocomplete="on"
-                            name="searchFilterString" 
-                            data-bind="value: searchFilterString" 
+                            name="searchFilterString"
+                            data-bind="value: searchFilterString"
                             placeholder="Filter Cafe Names..."/>
-                    <button data-bind="click: onSubmitFilter">Filter</button>  
+                    <button data-bind="click: onSubmitFilter">Filter</button>
                 </form>
                 <!-- ko if: searchFilterString -->
                 <div class="search_filter_text">
@@ -55,9 +55,9 @@
                 <!-- /ko -->
             </div>
             <ul class="places" data-bind="foreach: cafes">
-                <li class="place" 
+                <li class="place"
                     data-bind=
-                        "text: name, 
+                        "text: name,
                         css: { selected: $parent.cafeSelected() && $parent.cafeSelected().id == id },
                         click: () => $parent.onCafeSelected($data)"></li>
             </ul>
@@ -65,7 +65,7 @@
         <div class="map" id="map"></div>
         <!-- ko if: isLoading -->
         <div class="loading_overlay">
-            <img src="./images/loading_indicator.gif" />
+            <img alt="Loading..." src="./images/loading_indicator.gif" />
         </div>
         <!-- /ko -->
     </main>
