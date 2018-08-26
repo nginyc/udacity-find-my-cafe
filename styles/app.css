@@ -45,7 +45,20 @@
    padding: 0;
    margin: 0;
  }
- 
+
+ button {
+  font-family: inherit; 
+  font-size: 100%;
+  line-height: 1.15; 
+  margin: 0;
+  overflow: visible;
+  text-transform: none;
+  border-style: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+ }
+
  /*
  *
  * Common
@@ -60,8 +73,13 @@ textarea {
   font-size: 16px;
 }
 
+button {
+  padding: 4px 8px;
+  border: 1px solid #dce0e0;
+  border-radius: 4px;
+}
+
 body {
-  background-color: #efefef;
   color: #424242;
   height: 100vh;
   display: flex;
@@ -92,14 +110,46 @@ a[href]:hover {
   text-decoration: underline;
 }
 
+nav {
+  display: flex;
+  border-bottom: 1px solid #dce0e0;
+  padding: 12px 0px;
+  align-items: center;
+}
+
+nav .menu_icon {
+  display: block;
+  padding: 8px;
+}
+
+nav h1 {
+  padding: 0;
+  padding-left: 8px;
+}
+
 main {
   display: flex;
 }
 
-#places {
+main .places_box {
+  max-width: 400px;
+  border-right: 1px solid #dce0e0;
 }
 
-#map {
+main .places_box .search_box {
+  padding: 4px;
+  display: flex;
+}
+
+main .places_box .search_box input {
+  flex: 1;
+}
+
+main .places_box.hidden {
+  display: none;
+}
+
+main .map {
     height: 100%;
     flex: 1;
 }

@@ -7,6 +7,8 @@ const viewModel = {
     mapCenter: ko.observable(null),
     cafes: ko.observableArray([]),
     cafeSelectedId: ko.observable(null),
+    isMenuOpen: ko.observable(true),
+    searchAddressString: ko.observable(null),
 
     init: function() {
         view.init(
@@ -14,11 +16,16 @@ const viewModel = {
             this.mapCenter,
             this.cafes,
             this.cafeSelectedId,
-            (cafe) => this._onCafeSelected(cafe)
+            this.isMenuOpen,
+            this.searchAddressString,
+            (cafe) => this._onCafeSelected(cafe),
+            () => this._onMenuOpenToggle(),
+            () => this._onSearchAddress(),
         );
-        
+
         this._placesService = new google.maps.places.PlacesService(view.map);
-        
+        this._geocoder = new google.maps.Geocoder();
+
         this.userLocation.subscribe(() => this._onUserLocationUpdated());
         
         this._pullUserLocation()
@@ -27,8 +34,24 @@ const viewModel = {
             });
     },
 
+    _onMenuOpenToggle: function() {
+        this.isMenuOpen(!this.isMenuOpen());
+    },
+
     _onCafeSelected: function(cafe) {
         this.cafeSelectedId(cafe.id);
+    },
+
+    _onSearchAddress: function() {
+        const addressString = this.searchAddressString();
+        this._pullLocationFromAddress(addressString)
+            .then((location) => {
+                if (!location) {
+                    view.showAlert('Unable to find location from address.');
+                } else {
+                    this.userLocation(location);
+                }
+            });
     },
 
     _onUserLocationUpdated: function() {
@@ -53,6 +76,40 @@ const viewModel = {
         });
     },
 
+    _pullLocationFromAddress: function(addressString) {
+        return new Promise((resolve, reject) => {
+            this._geocoder.geocode(
+                {
+                    address: addressString
+                },
+                (results, status) => {
+                    if (status != google.maps.GeocoderStatus.OK &&
+                        status != google.maps.GeocoderStatus.ZERO_RESULTS) {
+                        console.error(results);
+                        reject(new Error(
+                            'Error when using Google Geocoding Service: ' + status + '.'
+                        ));
+                        return;
+                    }
+
+                    console.log(results);
+
+                    if (results.length == 0) {
+                        resolve(null);
+                        return;
+                    }
+                    
+                    const result = results[0];
+                    const location = {
+                        lat: result.geometry.location.lat(),
+                        lng: result.geometry.location.lng()
+                    };
+                    resolve(location);
+                }
+            );
+        })
+    },
+
     _pullPlacesNearLocation: function(lat, lng, radius, type) {
         return new Promise((resolve, reject) => {
            this._placesService.nearbySearch(
@@ -65,31 +122,32 @@ const viewModel = {
                     type: [type]
                 },
                 (results, status) => {
-                    if (status == google.maps.places.PlacesServiceStatus.OK) {
-                        const cafes = results.map((result) => {
-                            return {
-                                id: result.id,
-                                place_id: result.place_id,
-                                name: result.name,
-                                openNow: result.open_now,
-                                vicinity: result.vicinity,
-                                photoUrl: result.photos ? 
-                                    result.photos[0].getUrl({ 
-                                        maxWidth: 200,
-                                        maxHeight: 200 
-                                    }) : null,
-                                lat: result.geometry.location.lat(),
-                                lng: result.geometry.location.lng()
-                            };
-                        });
-                        
-                        resolve(cafes);
-                    } else {
+                    if (status != google.maps.places.PlacesServiceStatus.OK) {
                         console.error(results);
                         reject(new Error(
-                            'Google Places API returned a non-OK status: ' + status + '.'
+                            'Error when using Google Places Service nearby search: ' + status + '.'
                         ));
+                        return;
                     }
+
+                    const cafes = results.map((result) => {
+                        return {
+                            id: result.id,
+                            place_id: result.place_id,
+                            name: result.name,
+                            openNow: result.open_now,
+                            vicinity: result.vicinity,
+                            photoUrl: result.photos ? 
+                                result.photos[0].getUrl({ 
+                                    maxWidth: 200,
+                                    maxHeight: 200 
+                                }) : null,
+                            lat: result.geometry.location.lat(),
+                            lng: result.geometry.location.lng()
+                        };
+                    });
+                    
+                    resolve(cafes);
                 }
            );
         });
@@ -125,7 +183,8 @@ const view = {
     map: null,
 
     init: function(userLocation, mapCenter, cafes, cafeSelectedId,
-        onCafeSelected) {
+        isMenuOpen, searchAddressString,
+        onCafeSelected, onMenuOpenToggle, onSearchAddress) {
         mapCenter.subscribe(() => this._setMapCenter(mapCenter()));
         userLocation.subscribe(() => this._setUserLocation(userLocation()));
         cafes.subscribe(() => this._setCafes(cafes()));
@@ -133,12 +192,20 @@ const view = {
 
         ko.applyBindings({
             placeSelectedId: cafeSelectedId,
-            places: cafes
+            places: cafes,
+            isMenuOpen: isMenuOpen,
+            onMenuOpenToggle: onMenuOpenToggle,
+            searchAddressString: searchAddressString,
+            onSearchAddress: onSearchAddress
         });
 
         this._onCafeSelected = onCafeSelected;
 
         this.map = this._makeMap();
+    },
+
+    showAlert: function(message) {
+        window.alert(message);
     },
     
     _setMapCenter: function(mapCenter) {
