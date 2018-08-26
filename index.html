@@ -6,15 +6,20 @@
     <link rel="icon" href="./images/logo.png">
     <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="./styles/app.css">
+    <link rel="stylesheet" type="text/css" media="screen and (min-width: 480px)" href="./styles/over-480.css">
+    <link rel="stylesheet" type="text/css" media="screen and (min-width: 1024px)" href="./styles/over-1024.css">
     <title>Find My Cafe</title>
 </head>
 <body>
     <nav>
-        <a class="menu_icon" href="#" data-bind="click: onMenuOpenToggle">
-            <img src="./images/menu_icon.png" />
-        </a>
-        <div>
-            <h1>Find My Cafe</h1>
+        <div class="title_box">
+            <a class="menu_icon" href="#" data-bind="click: onMenuOpenToggle">
+                <img src="./images/menu_icon.png" />
+            </a>
+            <div>
+                <h1>Find My Cafe</h1>
+                <span class="attribution_text">Powered by Google Maps &amp; Foursquare APIs</span>
+            </div>
         </div>
         <form class="search_form">
             <div class="distance_box">
@@ -22,12 +27,12 @@
                 <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="1000">1km away
                 <input type="radio" data-bind="checked: searchDistanceMeters" name="distance" value="2000">2km away
             </div>
-            <input type="text"
-                autocomplete="on"
-                name="address" 
-                data-bind="value: searchAddressString" 
-                placeholder="From Location..."/>
-            <div>
+            <div class="search_box">
+                <input type="text"
+                    autocomplete="on"
+                    name="address" 
+                    data-bind="value: searchAddressString" 
+                    placeholder="From Location..."/>
                 <button data-bind="click: onSubmitSearch">Search</button>   
             </div> 
         </form>

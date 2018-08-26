@@ -1,0 +1,15 @@
+nav .search_form {
+    flex-direction: row;
+}
+
+nav .search_form input[name="address"] {
+    max-width: 400px;
+}
+
+main .places_box.hidden {
+    display: flex;
+}
+  
+nav .title_box .menu_icon {
+    display: none;
+}

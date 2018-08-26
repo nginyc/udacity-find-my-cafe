@@ -9,7 +9,7 @@ const viewModel = {
     searchDistanceMeters: ko.observable('2000'),
     cafeSelected: ko.observable(null),
     cafeSelectedDetails: ko.observable(null),
-    isMenuOpen: ko.observable(true),
+    isMenuOpen: ko.observable(false),
     searchFilterString: ko.observable(''),
     searchAddressString: ko.observable('1 Market Street, San Francisco, CA, USA'),
     isLoading: ko.observable(false),
@@ -42,6 +42,7 @@ const viewModel = {
 
     _onCafeSelected: function(cafe) {
         this.cafeSelected(cafe);
+        this.isMenuOpen(false);
 
         foursquareApi.pullPlaceDetails(cafe.lat, cafe.lng, cafe.name)
             .then((details) => {

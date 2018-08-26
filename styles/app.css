@@ -98,43 +98,51 @@ footer {
   text-align: right;
 }
 
-h1 {
-  padding: 20px 8px;
-}
-
 nav {
-  display: flex;
   border-bottom: 1px solid #dce0e0;
   padding: 12px 0px;
   align-items: center;
 }
 
-nav .menu_icon {
-  display: block;
-  padding: 8px;
+nav .title_box {
+  display: flex;
 }
 
-nav h1 {
+nav .title_box h1 {
   padding: 0;
   padding-left: 8px;
 }
 
+nav .title_box .menu_icon {
+  display: block;
+  padding: 8px;
+}
+
+nav .title_box .attribution_text {
+  font-size: 12px;
+  padding: 0 8px;
+  display: block;
+}
 
 nav .search_form {
   padding: 4px;
-  display: flex;
   flex: 1;
   justify-content: flex-end;
-  align-items: center;
+  align-items: stretch;
+  flex-direction: column;
+  display: flex;
 }
 
-nav .search_form input {
+nav .search_form .search_box {
+  display: flex;
+}
+
+nav .search_form .search_box input[name="address"] {
   flex: 1;
-  max-width: 400px;
 }
 
-nav .distance_box {
-  margin: 0 12px;
+nav .search_form .distance_box {
+  margin: 8px 12px 8px 0;
 }
 
 main {
