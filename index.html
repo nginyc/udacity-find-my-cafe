@@ -6,8 +6,8 @@
     <link rel="icon" href="./images/logo.png">
     <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="./styles/app.css">
-    <link rel="stylesheet" type="text/css" media="screen and (min-width: 480px)" href="./styles/over-480.css">
-    <link rel="stylesheet" type="text/css" media="screen and (min-width: 1024px)" href="./styles/over-1024.css">
+    <link rel="stylesheet" type="text/css" media="screen and (min-width: 480px)" href="./styles/over_480.css">
+    <link rel="stylesheet" type="text/css" media="screen and (min-width: 1024px)" href="./styles/over_1024.css">
     <title>Find My Cafe</title>
 </head>
 <body>
@@ -54,12 +54,12 @@
                 </div>
                 <!-- /ko -->
             </div>
-            <ul class="places" data-bind="foreach: places">
+            <ul class="places" data-bind="foreach: cafes">
                 <li class="place" 
                     data-bind=
                         "text: name, 
-                        css: { selected: $parent.placeSelected() && $parent.placeSelected().id == id },
-                        click: () => $parent.onPlaceSelected($data)"></li>
+                        css: { selected: $parent.cafeSelected() && $parent.cafeSelected().id == id },
+                        click: () => $parent.onCafeSelected($data)"></li>
             </ul>
         </div>
         <div class="map" id="map"></div>
@@ -70,6 +70,9 @@
         <!-- /ko -->
     </main>
     <script src="./scripts/lib/knockout-latest.js"></script>
+    <script src="./scripts/foursquareApi.js"></script>
+    <script src="./scripts/googleApi.js"></script>
+    <script src="./scripts/view.js"></script>
     <script src="./scripts/app.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIWVQ7uIQr8MfM8r8oYp4r_ygQB6LINTs&libraries=places&callback=onGoogleMapsApiLoaded" async defer></script>
 </html>

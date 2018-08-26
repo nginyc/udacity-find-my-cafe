@@ -2,8 +2,8 @@ nav .search_form {
     flex-direction: row;
 }
 
-nav .search_form input[name="address"] {
-    max-width: 400px;
+nav .search_form .search_box input[name="address"] {
+    width: 400px;
 }
 
 main .places_box.hidden {
