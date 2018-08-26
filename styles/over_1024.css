@@ -9,7 +9,7 @@ nav .search_form .search_box input[name="address"] {
 main .places_box.hidden {
     display: flex;
 }
-  
+
 nav .title_box .menu_icon {
     display: none;
 }

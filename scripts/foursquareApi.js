@@ -4,6 +4,10 @@ const foursquareApi = {
 
     init: function() {},
 
+    /**
+     * Fetches a venue's details from Foursquare's API based on latitude, longitude & the venue's name
+     * Resolves to a `details` object of shape { hoursText, foursquareUrl, placeUrl }
+     */
     pullPlaceDetails: function(lat, lng, name) {
         return this._fetch('/v2/venues/search', {
             limit: 1,
