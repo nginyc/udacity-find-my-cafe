@@ -4,4 +4,6 @@ A single-page web application that displays cafes near a selected location on a 
 
 ## Opening up the Web Application
 
-Open `./index.html` in your favorite modern web browser.
+Clone this project onto your machine.
+
+In the project's directory, open `./index.html` in your favorite modern web browser.

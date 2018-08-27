@@ -42,6 +42,12 @@ const foursquareApi = {
                 details.foursquareUrl = res.response.venue.canonicalUrl;
                 details.placeUrl = res.response.venue.url || null;
                 return details;
+            })
+            .catch((error) => {
+                console.error(error);
+                
+                // Let caller handle the error 
+                throw error; 
             });
     },
 

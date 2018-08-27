@@ -6,6 +6,13 @@ function onGoogleMapsApiLoaded() {
     app.init();
 }
 
+/**
+ * Called when Google Maps API fails to load
+ */
+function onGoogleMapsApiLoadFailed() {
+    view.showAlert('Failed to load Google Maps API');
+}
+
 const app = {
     /**
      * Default search values for the app
@@ -165,8 +172,14 @@ const app = {
         // Do a Foursquare venue search based on cafe selected 
         foursquareApi.pullPlaceDetails(cafe.lat, cafe.lng, cafe.name)
             .then((details) => {
-                // Populate cafe selcted's details
+                // Populate cafe selected's details
                 this.viewModel.cafeSelectedDetails(details);
+            })
+            .catch((error) => {
+                // Show an error to the user if fetching place details throws an error
+                view.showAlert(
+                    'Error while fetching venue details from Foursquare'
+                );
             });
     },
 
