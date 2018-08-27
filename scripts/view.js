@@ -181,9 +181,12 @@ const view = {
     _makeCafeInfoWindow: function (placeId, name, vicinity, photoUrl) {
         const content = this._getCafeInfoWindowContent(placeId, name,
             vicinity, photoUrl);
+
+        const infoWindowWidth = window.innerWidth >= 480 ? 400 : 200; 
+
         const infoWindow = new google.maps.InfoWindow({
             content: content,
-            maxWidth: 400
+            maxWidth: infoWindowWidth
         });
         return infoWindow;
     },

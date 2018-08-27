@@ -1,3 +1,7 @@
 nav {
     display: flex;
 }
+
+nav .title_box {
+    max-width: 200px;
+}

@@ -1,15 +1,31 @@
+body,
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
 nav .search_form {
     flex-direction: row;
+}
+
+nav .title_box {
+    max-width: none;
 }
 
 nav .search_form .search_box input[name="address"] {
     width: 400px;
 }
 
+nav .title_box .menu_icon {
+    display: none;
+}
+
 main .places_box.hidden {
     display: flex;
 }
 
-nav .title_box .menu_icon {
-    display: none;
+main .map .info_window_box img {
+    max-height: 280px;
+    max-width: 360px;
 }

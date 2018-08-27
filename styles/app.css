@@ -70,7 +70,7 @@ input,
 select,
 textarea {
   font-family: Quicksand;
-  font-size: 16px;
+  font-size: 14px;
   padding: 4px;
 }
 
@@ -215,7 +215,8 @@ main .map .info_window_box {
 }
 
 main .map .info_window_box img {
-  max-height: 280px;
+  max-width: 180px;
+  max-height: 100px;
 }
 
 main .map .info_window_box .open_now {
